@@ -37,6 +37,8 @@ import threading
 import geometry_msgs.msg
 import rcl_interfaces.msg
 import rclpy
+from std_srvs.srv import SetBool
+from std_msgs.msg import Int64
 
 if sys.platform == 'win32':
     import msvcrt
@@ -62,6 +64,13 @@ For Holonomic mode (strafing), hold down the shift key:
 
 t : up (+z)
 b : down (-z)
+
+Microtractor tool control:
+---------------------------
+h: tool up
+n: tool down
+f: tool start
+v: tool stop
 
 anything else : stop
 
@@ -155,6 +164,14 @@ def main():
 
     pub = node.create_publisher(TwistMsg, 'cmd_vel', 10)
 
+    calibrate_client = node.create_client(SetBool, 'mt_tool/actuator_calibrate')
+    if not calibrate_client.wait_for_service(timeout_sec=5.0):
+        node.get_logger().warn('Service mt_tool/actuator_calibrate not available yet…')
+
+    # Publishers: /mt_tool/actuator_target and /mt_tool/pto_speed (std_msgs/Int64)
+    target_pub = node.create_publisher(Int64, '/mt_tool/actuator_target', 10)
+    speed_pub  = node.create_publisher(Int64, '/mt_tool/pto_speed', 10)
+
     spinner = threading.Thread(target=rclpy.spin, args=(node,))
     spinner.start()
 
@@ -191,6 +208,17 @@ def main():
                 if (status == 14):
                     print(msg)
                 status = (status + 1) % 15
+            elif key in ['h', 'n', 'f', 'v']:
+                if key == 'h':
+                    req = SetBool.Request()
+                    req.data = True
+                    calibrate_client.call_async(req)
+                elif key == 'n':
+                    target_pub.publish(Int64(data=450))
+                elif key == 'f':
+                    speed_pub.publish(Int64(data=40))
+                elif key == 'v':
+                    speed_pub.publish(Int64(data=0))
             else:
                 x = 0.0
                 y = 0.0
