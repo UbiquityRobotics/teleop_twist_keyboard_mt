@@ -71,6 +71,8 @@ h: tool up
 n: tool down
 f: tool start
 v: tool stop
+a: tool less deep
+y: tool deeper
 
 anything else : stop
 
@@ -139,6 +141,9 @@ def restoreTerminalSettings(old_settings):
 def vels(speed, turn):
     return 'currently:\tspeed %.2f\tturn %.2f ' % (speed, turn)
 
+def tool_depth_str(depth):
+    return 'currently:\ttool depth %d ' % (depth)
+
 
 def main():
     settings = saveTerminalSettings()
@@ -180,6 +185,7 @@ def main():
     z = 0.0
     th = 0.0
     status = 0.0
+    tool_depth = 450
 
     twist_msg = TwistMsg()
 
@@ -208,17 +214,26 @@ def main():
                 if (status == 14):
                     print(msg)
                 status = (status + 1) % 15
-            elif key in ['h', 'n', 'f', 'v']:
+            elif key in ['h', 'n', 'f', 'v', 'a', 'y']:
+                # Commands for microtractor tool
                 if key == 'h':
                     req = SetBool.Request()
                     req.data = True
                     calibrate_client.call_async(req)
                 elif key == 'n':
-                    target_pub.publish(Int64(data=450))
+                    target_pub.publish(Int64(data=tool_depth))
                 elif key == 'f':
                     speed_pub.publish(Int64(data=40))
                 elif key == 'v':
                     speed_pub.publish(Int64(data=0))
+                elif key == 'a':
+                    tool_depth -= 10
+                    if tool_depth < 0:
+                        tool_depth = 0
+                    print(tool_depth_str(tool_depth))
+                elif key == 'y':
+                    tool_depth += 10
+                    print(tool_depth_str(tool_depth))
             else:
                 x = 0.0
                 y = 0.0
