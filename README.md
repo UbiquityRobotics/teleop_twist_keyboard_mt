@@ -1,22 +1,22 @@
-# teleop_twist_keyboard
-Generic Keyboard Teleoperation for ROS
+# teleop_twist_keyboard_mt
+Generic Keyboard Teleoperation for ROS with controls for microtractor's tool
 
 ## Run
 
 ```sh
-ros2 run teleop_twist_keyboard teleop_twist_keyboard
+ros2 run teleop_twist_keyboard_mt teleop_twist_keyboard_mt
 ```
 
 Publishing to a different topic (in this case `my_cmd_vel`).
 ```sh
-ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args --remap cmd_vel:=my_cmd_vel
+ros2 run teleop_twist_keyboard_mt teleop_twist_keyboard_mt --ros-args --remap cmd_vel:=my_cmd_vel
 ```
 
 ## Usage
 
 ```
-This node takes keypresses from the keyboard and publishes them as Twist
-messages. It works best with a US keyboard layout.
+This node takes keypresses from the keyboard and publishes them
+as Twist/TwistStamped messages. It works best with a US keyboard layout.
 ---------------------------
 Moving around:
    u    i    o
@@ -31,6 +31,15 @@ For Holonomic mode (strafing), hold down the shift key:
 
 t : up (+z)
 b : down (-z)
+
+Microtractor tool control:
+---------------------------
+h: tool up
+n: tool down
+f: tool start
+v: tool stop
+a: tool less deep
+y: tool deeper
 
 anything else : stop
 
