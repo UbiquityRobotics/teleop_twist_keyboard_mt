@@ -283,6 +283,7 @@ def main():
                 elif key == 'y':
                     tool_depth += 10
                     print(tool_depth_str(tool_depth))
+                continue
             else:
                 x = 0.0
                 y = 0.0
