@@ -144,8 +144,53 @@ def vels(speed, turn):
 def tool_depth_str(depth):
     return 'currently:\ttool depth %d ' % (depth)
 
+tool_timer = None
 
+def start_tool(speed_pub):
+    global tool_timer
+
+    speed = -1
+    while speed == -1:
+        speed = input("Enter speed (positive integer, 40 is default): ")
+        if speed == "":
+            speed = 40
+        else:
+            try:
+                speed = int(speed)
+                if speed <= 0 or speed > 50:
+                    speed = -1
+                    print("Speed should be greater than 0 and not higher than 50!")
+            except ValueError:
+                speed = -1
+                print("Error while converting provided value to a number!")
+    
+    timeout = -1
+    while timeout == -1:
+        timeout = input("Enter timeout in seconds (positive integer, 20 is default): ")
+        if timeout == "":
+            timeout = 20
+        else:
+            try:
+                timeout = int(timeout)
+                if timeout <= 0:
+                    timeout = -1
+                    print("Timeout should be greater than 0!")
+            except ValueError:
+                timeout = -1
+                print("Error while converting provided value to a number!")
+    speed_pub.publish(Int64(data=speed))
+    
+    def stop_tool():
+        global tool_timer
+        speed_pub.publish(Int64(data=0))
+        tool_timer = None
+
+    tool_timer = threading.Timer(timeout, stop_tool)
+    tool_timer.start()
+                
 def main():
+    global tool_timer
+
     settings = saveTerminalSettings()
 
     rclpy.init()
@@ -223,9 +268,13 @@ def main():
                 elif key == 'n':
                     target_pub.publish(Int64(data=tool_depth))
                 elif key == 'f':
-                    speed_pub.publish(Int64(data=40))
+                    start_tool(speed_pub)
                 elif key == 'v':
+                    # Stop the tool
                     speed_pub.publish(Int64(data=0))
+                    if tool_timer is not None:
+                        tool_timer.cancel()
+                        tool_timer = None
                 elif key == 'a':
                     tool_depth -= 10
                     if tool_depth < 0:
